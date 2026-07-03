@@ -149,14 +149,26 @@ export function QuickLogSheet({
   // Optimistic: the success message shows the instant the request fires,
   // before the network round-trip to Supabase resolves — logging should
   // feel instant even though it's now backed by a real database. If the
-  // write actually fails, we swap the optimistic message for an error
-  // and leave the sheet open so nothing is silently lost.
-  async function runQuickLog(task: () => Promise<{ count: number }>, optimisticMessage: string) {
-    setSuccessMessage(optimisticMessage);
+  // write actually fails outright, we swap the optimistic message for an
+  // error and leave the sheet open so nothing is silently lost. If it
+  // partially succeeds (some buckets in a batch failed, not all), we
+  // correct the message with the real count rather than leaving the
+  // optimistic guess uncorrected.
+  async function runQuickLog(
+    task: () => Promise<{ count: number }>,
+    expectedCount: number,
+    describeCount: (count: number) => string,
+  ) {
+    setSuccessMessage(describeCount(expectedCount));
     setErrorMessage(null);
     setIsSubmitting(true);
     try {
-      await task();
+      const result = await task();
+      if (result.count !== expectedCount) {
+        setSuccessMessage(
+          `${describeCount(result.count)} (${expectedCount - result.count} didn't save — try again for those.)`,
+        );
+      }
       router.refresh();
       setTimeout(onClose, CLOSE_AFTER_CONFIRM_MS);
     } catch (err) {
@@ -174,7 +186,8 @@ export function QuickLogSheet({
     if (outdoorCount === 0 || isSubmitting) return;
     runQuickLog(
       waterAllOutdoorBuckets,
-      `Watered ${outdoorCount} outdoor bucket${outdoorCount === 1 ? "" : "s"}.`,
+      outdoorCount,
+      (n) => `Watered ${n} outdoor bucket${n === 1 ? "" : "s"}.`,
     );
   }
 
@@ -237,7 +250,8 @@ export function QuickLogSheet({
           note: note.trim() || undefined,
           toStage: action === "stage-change" ? toStage ?? undefined : undefined,
         }),
-      `Logged ${actionLabel.toLowerCase()} for ${count} bucket${count === 1 ? "" : "s"}.`,
+      count,
+      (n) => `Logged ${actionLabel.toLowerCase()} for ${n} bucket${n === 1 ? "" : "s"}.`,
     );
   }
 

@@ -58,20 +58,32 @@ function revalidateAffected(flowerIds: string[]) {
 
 export async function submitQuickLog(input: QuickLogInput): Promise<{ count: number }> {
   const flowers = await listFlowers();
+  const targets = input.flowerIds
+    .map((id) => flowers.find((f) => f.id === id))
+    .filter((f): f is Flower => f !== undefined);
 
-  for (const id of input.flowerIds) {
-    const flower = flowers.find((f) => f.id === id);
-    if (!flower) continue;
+  // Promise.allSettled rather than sequential awaits: with up to 35 buckets
+  // in a single "water all outdoor" batch, one transient write failure
+  // shouldn't abort every bucket after it in the loop — each write stands
+  // on its own, and we report however many actually succeeded.
+  const results = await Promise.allSettled(
+    targets.map(async (flower) => {
+      await appendFlowerEvent(flower.id, buildEvent(input, flower));
+      if (input.action === "stage-change" && input.toStage) {
+        await setFlowerStage(flower.id, input.toStage);
+      }
+    }),
+  );
 
-    await appendFlowerEvent(id, buildEvent(input, flower));
-
-    if (input.action === "stage-change" && input.toStage) {
-      await setFlowerStage(id, input.toStage);
-    }
-  }
+  const count = results.filter((r) => r.status === "fulfilled").length;
 
   revalidateAffected(input.flowerIds);
-  return { count: input.flowerIds.length };
+
+  if (count === 0 && targets.length > 0) {
+    throw new Error("Couldn't save any of that — check your connection and try again.");
+  }
+
+  return { count };
 }
 
 export async function waterAllOutdoorBuckets(): Promise<{ count: number }> {
