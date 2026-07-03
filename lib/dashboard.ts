@@ -21,9 +21,17 @@ export interface GerminationStats {
   rate: number;
 }
 
-/** Excludes Group 4 (wrong-season, never sown) from the denominator. */
+function hasBeenSown(flower: Flower): boolean {
+  return flower.events.some((e) => e.type === "sown");
+}
+
+/**
+ * "Sown" means an actual logged Sown event, not group membership — a
+ * flower isn't sown just because it's in a direct-sow group, only once
+ * you've told the app you planted it via Quick Log.
+ */
 export function getGerminationStats(flowers: Flower[]): GerminationStats {
-  const sown = flowers.filter((f) => f.group !== 4);
+  const sown = flowers.filter(hasBeenSown);
   const germinated = sown.filter((f) => f.stage !== "Dormant");
   const rate = sown.length === 0 ? 0 : Math.round((germinated.length / sown.length) * 100);
   return { sown: sown.length, germinated: germinated.length, rate };
@@ -45,7 +53,7 @@ export function getNeedsAttention(flowers: Flower[]): AttentionItem[] {
       items.push({ flower, reason: "Wrong season — held dormant until the cool season." });
       return items;
     }
-    if (flower.stage === "Dormant") {
+    if (flower.stage === "Dormant" && hasBeenSown(flower)) {
       const maxDays = parseMaxGerminationDays(flower.expectedGerminationDays);
       if (flower.daysPlanted > maxDays) {
         items.push({

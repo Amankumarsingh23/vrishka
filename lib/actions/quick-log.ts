@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { appendFlowerEvent, listFlowers, setFlowerStage } from "@/lib/data/flowers";
 import type { Flower, FlowerEvent, FlowerEventType, Stage } from "@/types/flower";
 
-export type QuickLogAction = "watered" | "photo" | "stage-change" | "note" | "disease-spotted";
+export type QuickLogAction = "sown" | "watered" | "photo" | "stage-change" | "note" | "disease-spotted";
 
 export interface QuickLogInput {
   action: QuickLogAction;
@@ -15,6 +15,7 @@ export interface QuickLogInput {
 }
 
 const ACTION_LABELS: Record<QuickLogAction, string> = {
+  sown: "Sown",
   watered: "Watered",
   photo: "Photo added",
   "stage-change": "Stage change",

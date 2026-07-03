@@ -18,6 +18,7 @@ const TRANSITION_MS = 260;
 const CLOSE_AFTER_CONFIRM_MS = 700;
 
 const ACTION_OPTIONS: Array<{ key: QuickLogAction; label: string }> = [
+  { key: "sown", label: "Sown" },
   { key: "watered", label: "Watered" },
   { key: "photo", label: "Photo" },
   { key: "stage-change", label: "Stage change" },

@@ -20,9 +20,11 @@ export function CareSheet({ flower }: { flower: Flower }) {
           </div>
         ))}
       </dl>
-      <p className="mt-5 border-l-[3px] border-gold pl-4 font-serif text-[15px] italic text-body">
-        {flower.note}
-      </p>
+      {flower.note && (
+        <p className="mt-5 border-l-[3px] border-gold pl-4 font-serif text-[15px] italic text-body">
+          {flower.note}
+        </p>
+      )}
     </div>
   );
 }
