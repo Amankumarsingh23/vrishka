@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Flower } from "@/types/flower";
 import { STAGES } from "@/lib/stages";
 import { cn } from "@/lib/utils";
+import { useSheetTransition } from "@/lib/hooks/useSheetTransition";
 import { uploadFlowerPhoto } from "@/lib/upload/uploadFlowerPhoto";
 import { StagePill } from "@/components/ui/StagePill";
 import { ToggleChip } from "@/components/quick-log/ToggleChip";
@@ -14,7 +15,6 @@ import {
   type QuickLogAction,
 } from "@/lib/actions/quick-log";
 
-const TRANSITION_MS = 260;
 const CLOSE_AFTER_CONFIRM_MS = 700;
 
 const ACTION_OPTIONS: Array<{ key: QuickLogAction; label: string }> = [
@@ -45,9 +45,7 @@ export function QuickLogSheet({
 }) {
   const router = useRouter();
   const photoInputRef = useRef<HTMLInputElement>(null);
-
-  const [isRendered, setIsRendered] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const { isRendered, isVisible } = useSheetTransition(open);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [action, setAction] = useState<QuickLogAction | null>(null);
@@ -70,17 +68,6 @@ export function QuickLogSheet({
     () => flowers.filter((f) => f.commonName.toLowerCase().includes(search.trim().toLowerCase())),
     [flowers, search],
   );
-
-  useEffect(() => {
-    if (open) {
-      setIsRendered(true);
-      const raf = requestAnimationFrame(() => setIsVisible(true));
-      return () => cancelAnimationFrame(raf);
-    }
-    setIsVisible(false);
-    const timeout = setTimeout(() => setIsRendered(false), TRANSITION_MS);
-    return () => clearTimeout(timeout);
-  }, [open]);
 
   useEffect(() => {
     if (isRendered) return;

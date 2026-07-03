@@ -1,4 +1,5 @@
 import type { Flower, FlowerEvent, FlowerEventType, FlowerGroup, Stage } from "@/types/flower";
+import { GROUP_LABELS } from "@/types/flower";
 import { supabase } from "@/lib/supabase/client";
 
 /**
@@ -137,4 +138,70 @@ export async function setFlowerStage(id: string, stage: Stage): Promise<Flower |
   const { error } = await supabase.from("flowers").update({ stage }).eq("id", id);
   if (error) throw error;
   return getFlower(id);
+}
+
+export interface NewFlowerInput {
+  commonName: string;
+  latinName?: string;
+  group: FlowerGroup;
+  sowMethod?: string;
+  sunNeeds?: string;
+  wateringRule?: string;
+  expectedGerminationDays?: string;
+  diseaseRisk?: string;
+  note?: string;
+}
+
+function slugify(name: string): string {
+  const base = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return base || "bucket";
+}
+
+/**
+ * New buckets always start Dormant at day 0 with no events — same rule
+ * as everything else in this app: nothing is "planted" until you log it
+ * yourself. bucketNo auto-increments past whatever's already there; id is
+ * a slug derived from the name, disambiguated against existing ids.
+ */
+export async function createFlower(input: NewFlowerInput): Promise<Flower> {
+  const existing = await listFlowers();
+  const existingIds = new Set(existing.map((f) => f.id));
+
+  const baseSlug = slugify(input.commonName);
+  let id = baseSlug;
+  let suffix = 2;
+  while (existingIds.has(id)) {
+    id = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  const nextBucketNo = existing.reduce((max, f) => Math.max(max, f.bucketNo), 0) + 1;
+
+  const { data, error } = await supabase
+    .from("flowers")
+    .insert({
+      id,
+      bucket_no: nextBucketNo,
+      common_name: input.commonName,
+      latin_name: input.latinName ?? "",
+      group_no: input.group,
+      group_label: GROUP_LABELS[input.group],
+      stage: "Dormant",
+      days_planted: 0,
+      sow_method: input.sowMethod ?? "",
+      sun_needs: input.sunNeeds ?? "",
+      watering_rule: input.wateringRule ?? "",
+      expected_germination_days: input.expectedGerminationDays ?? "",
+      disease_risk: input.diseaseRisk ?? "",
+      note: input.note ?? "",
+    })
+    .select(FLOWER_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapFlowerRow(data as unknown as FlowerRow);
 }

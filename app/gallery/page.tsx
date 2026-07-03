@@ -2,6 +2,7 @@ import { listFlowers, listFlowersByGroup } from "@/lib/data/flowers";
 import type { FlowerGroup } from "@/types/flower";
 import { FilterChips } from "@/components/gallery/FilterChips";
 import { FlowerCard } from "@/components/gallery/FlowerCard";
+import { AddFlowerLauncher } from "@/components/gallery/AddFlowerLauncher";
 
 // Explicit alongside the implicit dynamic behavior from reading
 // searchParams — see app/page.tsx for why this matters for this app.
@@ -24,10 +25,15 @@ export default async function GalleryPage({
 
   return (
     <div>
-      <h1 className="font-serif text-h1 text-ink">Gallery</h1>
-      <p className="mt-2 font-sans text-body">
-        Browse every plant in your collection.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-h1 text-ink">Gallery</h1>
+          <p className="mt-2 font-sans text-body">
+            Browse every plant in your collection.
+          </p>
+        </div>
+        <AddFlowerLauncher />
+      </div>
 
       <div className="mt-6">
         <FilterChips active={activeGroup} />
