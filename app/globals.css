@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base */
+  --color-paper: #F6EFE1;
+  --color-surface: #FBF6EA;
+  --color-border: #EAE0C8;
+  --color-border-alt: #E4D6BA;
+  --color-track: #EFE7D3;
+
+  /* Ink */
+  --color-ink: #26301F;
+  --color-body: #5C5A48;
+  --color-muted: #928C72;
+  --color-muted-2: #847F6C;
+
+  /* Brand */
+  --color-primary: #2C4A38;
+  --color-primary-hover: #24402F;
+  --color-accent: #C1573E;
+  --color-gold: #CE9243;
+  --color-gold-dark: #9A6B3F;
+  --color-sage: #8FA07E;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(38,48,31,0.04), 0 8px 24px -12px rgba(38,48,31,0.12);
+  --shadow-card-lg: 0 1px 2px rgba(38,48,31,0.05), 0 10px 26px -14px rgba(38,48,31,0.18);
+  --shadow-card-hover: 0 4px 10px rgba(38,48,31,0.08), 0 22px 36px -16px rgba(38,48,31,0.28);
+  --shadow-fab: 0 8px 20px -6px rgba(44,74,56,0.5);
+  --shadow-frame: 0 20px 60px -20px rgba(38,48,31,0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  color: var(--color-body);
+  background: var(--color-paper);
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Paper-grain background texture: subtle noise laid over the paper color */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.15  0 0 0 0 0.19  0 0 0 0 0.12  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes growBar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes growDown {
+  from { height: 0; }
+  to { height: 100%; }
+}
+
+@keyframes drawRing {
+  to { stroke-dashoffset: var(--ring-target); }
+}
